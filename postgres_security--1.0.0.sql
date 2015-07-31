@@ -5,36 +5,35 @@ CREATE SCHEMA postgres_security;
 
 SET search_path TO postgres_security, pg_catalog, "$user", public;
 
-CREATE TYPE int4;
+CREATE TYPE text;
 
-CREATE FUNCTION int4in(cstring)
-RETURNS int4
+CREATE FUNCTION textin(cstring)
+RETURNS text
 AS 'MODULE_PATHNAME'
 LANGUAGE C STRICT IMMUTABLE;
 
-CREATE FUNCTION int4out(int4)
+CREATE FUNCTION textout(text)
 RETURNS cstring
 AS 'MODULE_PATHNAME'
 LANGUAGE C STRICT IMMUTABLE;
 
-CREATE FUNCTION int4recv(internal)
-RETURNS int4
+CREATE FUNCTION textrecv(internal)
+RETURNS text
 AS 'MODULE_PATHNAME'
 LANGUAGE C STRICT IMMUTABLE;
 
-CREATE FUNCTION int4send(int4)
+CREATE FUNCTION textsend(text)
 RETURNS bytea
 AS 'MODULE_PATHNAME'
 LANGUAGE C STRICT IMMUTABLE;
 
-CREATE TYPE int4 (
-	INPUT = int4in,
-	OUTPUT = int4out,
-	RECEIVE = int4recv,
-	SEND = int4send,
-	LIKE = pg_catalog.int4,
-  CATEGORY = "N"
+CREATE TYPE text (
+	INPUT = textin,
+	OUTPUT = textout,
+	RECEIVE = textrecv,
+	SEND = textsend,
+	LIKE = pg_catalog.text,
+  CATEGORY = "S"
 );
 
-CREATE CAST (int4 AS integer) WITH INOUT AS IMPLICIT;
-CREATE CAST (integer AS int4) WITH INOUT AS IMPLICIT;
+RESET search_path;

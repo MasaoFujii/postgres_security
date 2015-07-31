@@ -5,44 +5,49 @@
 
 PG_MODULE_MAGIC;
 
-PG_FUNCTION_INFO_V1(int4in);
-PG_FUNCTION_INFO_V1(int4out);
-PG_FUNCTION_INFO_V1(int4recv);
-PG_FUNCTION_INFO_V1(int4send);
+PG_FUNCTION_INFO_V1(textin);
+PG_FUNCTION_INFO_V1(textout);
+PG_FUNCTION_INFO_V1(textrecv);
+PG_FUNCTION_INFO_V1(textsend);
 
 Datum
-int4in(PG_FUNCTION_ARGS)
+textin(PG_FUNCTION_ARGS)
 {
-	char	   *num = PG_GETARG_CSTRING(0);
+	char	   *inputText = PG_GETARG_CSTRING(0);
 
-	PG_RETURN_INT32(pg_atoi(num, sizeof(int32), '\0'));
+	PG_RETURN_TEXT_P(cstring_to_text(inputText));
 }
 
 Datum
-int4out(PG_FUNCTION_ARGS)
+textout(PG_FUNCTION_ARGS)
 {
-	int32		arg1 = PG_GETARG_INT32(0);
-	char	   *result = (char *) palloc(12);	/* sign, 10 digits, '\0' */
+	Datum		txt = PG_GETARG_DATUM(0);
 
-	pg_ltoa(arg1, result);
-	PG_RETURN_CSTRING(result);
+	PG_RETURN_CSTRING(TextDatumGetCString(txt));
 }
 
 Datum
-int4recv(PG_FUNCTION_ARGS)
+textrecv(PG_FUNCTION_ARGS)
 {
 	StringInfo	buf = (StringInfo) PG_GETARG_POINTER(0);
+	text	   *result;
+	char	   *str;
+	int			nbytes;
 
-	PG_RETURN_INT32((int32) pq_getmsgint(buf, sizeof(int32)));
+	str = pq_getmsgtext(buf, buf->len - buf->cursor, &nbytes);
+
+	result = cstring_to_text_with_len(str, nbytes);
+	pfree(str);
+	PG_RETURN_TEXT_P(result);
 }
 
 Datum
-int4send(PG_FUNCTION_ARGS)
+textsend(PG_FUNCTION_ARGS)
 {
-	int32		arg1 = PG_GETARG_INT32(0);
+	text	   *t = PG_GETARG_TEXT_PP(0);
 	StringInfoData buf;
 
 	pq_begintypsend(&buf);
-	pq_sendint(&buf, arg1, sizeof(int32));
+	pq_sendtext(&buf, VARDATA_ANY(t), VARSIZE_ANY_EXHDR(t));
 	PG_RETURN_BYTEA_P(pq_endtypsend(&buf));
 }
